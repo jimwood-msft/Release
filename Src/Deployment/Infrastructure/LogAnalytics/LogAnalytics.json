@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LogAnalyticsWorkspaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Workspace name"
+      }
+    },
+    "LogAnalyticsWorkspaceSku": {
+      "type": "string",
+      "allowedValues": [
+        "PerGB2018",
+        "Free",
+        "Standalone",
+        "PerNode",
+        "Standard",
+        "Premium"
+      ],
+      "defaultValue": "Free",
+      "metadata": {
+        "description": "Pricing tier: pergb2018 or legacy tiers (Free, Standalone, PerNode, Standard or Premium) which are not available to all customers."
+      }
+    },
+    "LogAnalyticsRetentionPeriodDays": {
+      "type": "int",
+      "defaultValue": 90,
+      "metadata": {
+        "description": "Number of days of retention. Workspaces in the legacy Free pricing tier can only have 7 days."
+      }
+    }
+  },
+  "variables": {
+    "resourceGroupName": "[resourceGroup().name]",
+    "subscriptionId": "[subscription().subscriptionId]",
+    "location": "[resourceGroup().location]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[parameters('LogAnalyticsWorkspaceName')]",
+      "apiVersion": "2017-03-15-preview",
+      "location": "[variables('location')]",
+      "properties": {
+        "sku": {
+          "Name": "[parameters('LogAnalyticsWorkspaceSku')]",
+          "name": "CapacityReservation",
+          "capacityReservationLevel": 100
+        },
+        "retentionInDays": "[parameters('LogAnalyticsRetentionPeriodDays')]",
+        "features": {
+          "searchVersion": 1,
+          "legacy": 0,
+          "enableLogAccessUsingOnlyResourcePermissions": true
+        }
+      }
+    }
+  ]
+}

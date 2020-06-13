@@ -1,0 +1,49 @@
+{
+  "Infrastructure": {
+	"AutomationAccountName": "saptg-ppe-automation-eus",
+	"AutomationAccountDataRetention": 30,
+	"AutomationAccountImmediatePurge": false,
+	"AutomationAccountSku": "Free",
+	"AadDeploymentUserObjectId": "aaa3f3e7-1906-4da7-b786-fd24e7a01bac",
+	"AadTenant": "jimmydubmsn.onmicrosoft.com",
+	"AadTenantId": "49054f7d-dea9-47b1-a672-21be64f9e1a2",
+	"AlertEmail": "jimmydub@msn.com",
+	"AllowAzureIPs": true,
+	"AzureActiveDirectorySid": "cc700917-9160-450d-9962-0286f4ce0624",
+	"AzureAdAminGroupDisplayName": "JimTestGroup",
+	"EnableADS": true,
+	"KeyVaultEnabledForTemplateDeployment": true,
+	"KeyVaultName": "saptg-ppe-keyvault-eus",
+	"KeyVaultSkuName": "Standard",
+	"location": "East US",
+	"LogAnalyticsRetentionPeriodDays": 90,
+	"LogAnalyticsWorkspaceName": "saptg-ppe-loganalytics-eus",
+	"LogAnalyticsWorkspaceSku": "Standard",
+	"ResourceGroupName": "saptg-ppe-rg-eus",
+	"SqlConnectionType": "Default",
+	"SqlDatabaseName": {
+	  "name": "QoSPpeDB",
+	  "collation": "SQL_Latin1_General_CP1_CI_AS",
+	  "serviceLevelObjective": "S0",
+	  "edition": "Standard"
+	},
+	"SqlServerAdminLogin": "ppeqosadmin",
+	"SqlServerName": "qosppe",
+	"SqlServerAdminPassword": {
+	  "value": "PULLEDFROMKEYVAULT",
+	  "secretName": "ppeqosadmin"
+	},
+	"SqlStorageAccountName": "saptg-ppe-sqlstorage-eus",
+	"SqlStorageAccountSku": {
+	  "name": "Standard_LRS",
+	  "tier": "Standard"
+	},
+	"StreamAnalyticsJobName": "BatchJob_Executions_Test",
+	"StreamAnalyticsOutputName": "BatchJobToSQL",
+	"StreamAnalyticsStreamingUnits": 3,
+	"StorageAccountName": "saptg-ppe-sqlstorage-eus",
+	"StorageAccountSku": "Standard_LRS",
+	"StorageBatchJobContainerName": "ppebatchjobcontainer",
+	"StorageWebServiceContainerName": "ppewebservicecontainer"
+  }
+}

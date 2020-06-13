@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "StorageAccountSku": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS",
+        "Standard_ZRS",
+        "Premium_LRS"
+      ],
+      "metadata": {
+        "description": "Storage Account type"
+      }
+    },
+    "StorageAccountName": {
+      "type": "string"
+    },
+    "StorageBatchJobContainerName": {
+      "type": "string"
+    },
+    "StorageDeploymentContainerName": {
+      "type": "string",
+      "defaultValue": "Deployment Components"
+    },
+    "StorageWebServiceContainerName": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2019-04-01",
+      "name": "[parameters('StorageAccountName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "[parameters('StorageAccountSku')]"
+      },
+      "kind": "StorageV2",
+      "properties": {},
+      "resources": [
+        {
+          "type": "blobServices/containers",
+          "apiVersion": "2019-04-01",
+          "name": "[concat('default/',parameters('StorageBatchJobContainerName'))]",
+          "dependsOn": [
+            "[parameters('StorageAccountName')]"
+          ]
+        },
+        {
+          "type": "blobServices/containers",
+          "apiVersion": "2019-04-01",
+          "name": "[concat('default/',parameters('StorageDeploymentContainerName'))]",
+          "dependsOn": [
+            "[parameters('StorageAccountName')]"
+          ]
+        },
+        {
+          "type": "blobServices/containers",
+          "apiVersion": "2019-04-01",
+          "name": "[concat('default/',parameters('StorageWebServiceContainerName'))]",
+          "dependsOn": [
+            "[parameters('StorageAccountName')]"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "storageAccountName": {
+      "type": "string",
+      "value": "[parameters('StorageAccountName')]"
+    }
+  }
+}

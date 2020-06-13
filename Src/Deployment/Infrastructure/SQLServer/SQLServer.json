@@ -1,0 +1,188 @@
+{
+  "$schema": "http://schemas.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "AlertEmail": {
+      "type": "string"
+    },
+    "SqlStorageAccountName": {
+      "type": "string"
+    },
+    "SqlStorageAccountSku": {
+      "type": "object"
+    },
+    "AzureActiveDirectorySid": {
+      "type": "string"
+    },
+    "AzureAdAminGroupDisplayName": {
+      "type": "string"
+    },
+    "SqlServerAdminLogin": {
+      "type": "string"
+    },
+    "SqlServerAdminPassword": {
+      "type": "securestring"
+    },
+    "SqlServerName": {
+      "type": "string"
+    },
+    "SqlDatabaseName": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "resourceGroupName": "[resourceGroup().name]",
+    "subscriptionId": "[subscription().subscriptionId]",
+    "location": "[resourceGroup().location]"
+  },
+  "resources": [
+    {
+      "comments": "Audit Storage Account Deployment",
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": "[parameters('SqlStorageAccountSku')]",
+      "kind": "Storage",
+      "name": "[parameters('SqlStorageAccountName')]",
+      "apiVersion": "2017-06-01",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "name": "[parameters('SqlServerName')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[variables('location')]",
+      "apiVersion": "2014-04-01",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('SqlStorageAccountName'))]"
+      ],
+      "tags": {
+        "displayName": "[parameters('SqlStorageAccountName')]"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('SqlServerAdminLogin')]",
+        "administratorLoginPassword": "[parameters('SqlServerAdminPassword')]",
+        "version": "12.0"
+      },
+      "resources": [
+        {
+          "name": "ActiveDirectory",
+          "type": "administrators",
+          "apiVersion": "2014-04-01",
+          "location": "[variables('location')]",
+          "dependsOn": [
+            "[parameters('SqlServerName')]"
+          ],
+          "properties": {
+            "administratorType": "ActiveDirectory",
+            "login": "[parameters('AzureAdAminGroupDisplayName')]",
+            "sid": "[parameters('AzureActiveDirectorySid')]",
+            "tenantId": "[subscription().tenantId]"
+          }
+        },
+        {
+          "name": "[parameters('SqlDatabaseName').name]",
+          "type": "databases",
+          "location": "[variables('location')]",
+          "apiVersion": "2014-04-01",
+          "dependsOn": [
+            "[parameters('SqlServerName')]"
+          ],
+          "tags": {
+            "displayName": "SqlDatabaseName"
+          },
+          "properties": {
+            "collation": "[parameters('SqlDatabaseName').collation]",
+            "edition": "[parameters('SqlDatabaseName').edition]",
+            "requestedServiceObjectiveName": "[parameters('SqlDatabaseName').serviceLevelObjective]"
+          },
+          "resources": [
+          ]
+        },
+        {
+          "type": "Microsoft.Sql/servers/firewallRules",
+          "kind": "v12.0",
+          "name": "[concat(parameters('SqlServerName'), '/AllowAllWindowsAzureIps')]",
+          "apiVersion": "2014-04-01",
+          "location": "West US",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          },
+          "dependsOn": [
+            "[parameters('SqlServerName')]"
+          ]
+        },
+        {
+          "apiVersion": "2015-05-01-preview",
+          "type": "auditingSettings",
+          "name": "Default",
+          "location": "West US",
+          "dependsOn": [
+            "[parameters('SqlServerName')]"
+          ],
+          "properties": {
+            "State": "Enabled",
+            "storageEndpoint": "[concat('https://', parameters('SqlStorageAccountName'), '.blob.core.windows.net/')]",
+            "storageAccountAccessKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('SqlStorageAccountName')), '2015-05-01-preview').key1]",
+            "retentionDays": "365",
+            "auditActionsAndGroups": null,
+            "storageAccountSubscriptionId": "[variables('subscriptionId')]",
+            "isStorageSecondaryKeyInUse": false
+          }
+        },
+        {
+          "apiVersion": "2014-04-01",
+          "type": "auditingPolicies",
+          "name": "Default",
+          "dependsOn": [
+            "[concat('Microsoft.Sql/servers/', parameters('SqlServerName'))]",
+            "[concat('Microsoft.Sql/servers/', parameters('SqlServerName'), '/databases/',parameters('SqlDatabaseName').name)]"
+          ],
+          "properties": {
+            "auditingState": "Enabled",
+            "storageAccountName": "[parameters('SqlStorageAccountName')]",
+            "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('SqlStorageAccountName')), '2015-05-01-preview').key1]",
+            "storageAccountResourceGroupName": "[variables('resourceGroupName')]",
+            "storageAccountSubscriptionId": "[variables('subscriptionId')]",
+            "eventTypesToAudit": "All"
+          }
+        },
+        {
+          "apiVersion": "2015-05-01-preview",
+          "type": "securityAlertPolicies",
+          "name": "Default",
+          "dependsOn": [
+            "[concat('Microsoft.Sql/servers/', parameters('SqlServerName'))]",
+            "[concat('Microsoft.Sql/servers/', parameters('SqlServerName'), '/databases/',parameters('SqlDatabaseName').name)]",
+            "[concat('Microsoft.Sql/servers/', parameters('SqlServerName'), '/auditingPolicies/Default')]"
+          ],
+          "properties": {
+            "state": "Enabled",
+            "disabledAlerts": "",
+            "emailAddresses": "[parameters('AlertEmail')]",
+            "emailAccountAdmins": "Enabled",
+            "storageEndpoint": "[concat('https://', parameters('SqlStorageAccountName'), '.blob.core.windows.net/')]",
+            "storageAccountAccessKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('SqlStorageAccountName')), '2015-05-01-preview').key1]",
+            "retentionDays": "365"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {}
+}

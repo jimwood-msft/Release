@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "AutomationAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Specify the name of your Automation Account"
+      }
+    },
+    "AutomationAccountRunbookName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the runbook to be deployed"
+      }
+    },
+    "AutomationAccountRunbookDescription": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the runbook to be deployed"
+      }
+    },
+    "AutomationAccountRunbookType": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the runbook to be deployed"
+      }
+    },
+    "AutomationAccountScriptLocation": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/asr-automation-recovery",
+      "metadata": {
+        "description": "URI to artifacts location"
+      }
+    },
+    "StorageAccountName": {
+      "type": "string"
+    },
+    "StorageDeploymentContainerName": {
+      "type": "string" 
+    }
+  },
+  "variables": {
+    "resourceGroupName": "[resourceGroup().name]",
+    "subscriptionId": "[subscription().subscriptionId]",
+    "subscriptionName": "[subscription().displayName]",
+    "location": "[resourceGroup().location]"
+  },
+  "resources": [
+    {
+      "name": "[parameters('AutomationAccountName')]",
+      "type": "Microsoft.Automation/automationAccounts",
+      "apiVersion": "2015-10-31",
+      "location": "[variables('location')]",
+      "properties": {}
+    },
+    {
+      "apiVersion": "2015-10-31",
+      "type": "Microsoft.Automation/automationAccounts/runbooks",
+      "name": "[concat(parameters('AutomationAccountName'), '/', parameters('AutomationAccountRunbookName'))]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Automation/automationAccounts/', parameters('AutomationAccountName'))]"
+      ],
+      "properties": {
+        "description": "[parameters('AutomationAccountRunbookDescription')]",
+        "runbookType": "[parameters('AutomationAccountRunbookType')]",
+        "logProgress": false,
+        "logVerbose": true,
+        "publishContentLink": {
+          "uri": "[parameters('AutomationAccountScriptLocation')]",
+          "version": "1.0.0.0"
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}

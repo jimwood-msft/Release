@@ -1,0 +1,9 @@
+trigger: none
+
+parameters:
+- name: 'EnvironmentName'
+  displayName: "Name of the environment to deploy"
+  type: string
+  values: 
+  - ppe
+  - prod
