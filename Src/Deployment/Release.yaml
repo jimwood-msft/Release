@@ -7,3 +7,23 @@ parameters:
   values: 
   - ppe
   - prod
+
+stages:
+- stage: 'Deploy'
+  displayName: 'Deploy Selected Environment'
+  variables:
+    ${{ if eq(parameters.EnvironmentName, 'uat') }}:
+      Connection: 'LG-QoS-PPE-SPN'
+
+  jobs:
+  - job: 'Deploy'
+    displayName: 'Run Deployment'
+    steps:
+    - task: 'AzurePowerShell@3'
+      displayName: 'Deploy Infrastructure'
+      inputs:
+        azureSubscription: ${{ variables.Connection }}
+        ScriptPath: '$(Build.SourcesDirectory)\Src\Deployment\DeployResource.ps1'
+        ScriptArguments: '-Path "$(Build.SourcesDirectory)" -EnvironmentConfig "${{parameters.EnvironmentName}}" '
+        FailOnStandardError: true
+        azurePowerShellVersion: 'LatestVersion'
